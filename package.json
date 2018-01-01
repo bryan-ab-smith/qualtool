@@ -2,6 +2,10 @@
   "name": "qualtool",
   "version": "1.0.0",
   "description": "Tool to help analyze qualitative data.",
+  "bin": {
+    "qualtool": "index.js"
+  },
+  "preferGlobal": true,
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,8 +18,10 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^2.3.0",
+    "natural": "^0.5.4",
     "node-sentiment": "0.0.6",
     "ora": "^1.3.0",
-    "table": "^4.0.2"
+    "table": "^4.0.2",
+    "wordcount": "^1.1.1"
   }
 }

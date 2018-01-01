@@ -1,0 +1,9 @@
+{
+	"docIn": "test_doc.txt",
+	"docOut": "~/Desktop/output.txt",
+	"tdidf":
+		{
+			"eval": true,
+			"terms": "Canada History"
+		}
+}
