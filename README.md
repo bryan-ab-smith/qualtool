@@ -5,24 +5,40 @@ This is a simple tool that will analyze a text and produce some insights into th
 ## Features
 * Descriptive analysis
 	* Word count
+* Character analysis
+	* Counts of alphabet letters
 * Semantic analysis
 	* Score
 	* Comparative
+	* Vote
 * TF-IDF
+	* Scores for each word
+* Subset (<span style='color: #BC2100'>NOTE: This is a rough breakdown and any results should be verified by the analyst.</span>)
+	* Breakdown of people, places, organizations, questions, quotations and statements.
+* Parts of speech
+	* Percentage counts of nouns, verbs, adjectives and adverbs
 
 ## Getting Started
 
 1. Install [Node.js](https://nodejs.org/).
-2. Install all the dependencies by running `npm install` in the directory with the package.json file.
+2. Install all the dependencies by running `npm install -g` in the directory with the package.json file (see below).
+	* This needs to be done with elevated privileges if you install it globally.
 3. Enjoy.
 	* If you want to try it out, run qualtool against the `test_doc.txt` file provided here.
+
+### Build Tools
+You may need build tools for each platform. You can install the Windows build tools with the following (from an Adminsitrator prompt): `npm install windows-build-tools`. On macOS, install the Xcode comamnd line tools by executing the following: `xcode-select --install`. Finally, on Linux, you'll need the equivalent of Ubuntu's `build-essential` package. I'm not sure what from that is necessary but I'm assuming it's gcc/llvm and make.
 
 ## Usage
 The syntax is as follows:
 ```
-qualtool <name of text file> <output file> _<open>_
+qualtool <local/online> <name of file file> <output file> _<open>_
 ```
-_open_ (optional): If you append _open_ to the end of the command, the output file will be opened once the analysis is complete.
+### Parameters
+* local/online - If you set this to online, your _name of the file_ is a URL for a text that is online that you want to analyze. _local_ will set qualtool to analyze a local document.
+* name of the file - the name and path of the file you want to analyze.
+* output file - where the results will be saved.
+* _open_ (optional): If you append _open_ to the end of the command, the output file will be opened once the analysis is complete.
 **Note: NPM global installs of qualtool should work...hopefully. Proceed with caution (if concerned, run it locally for now).**
 
 ## Features
@@ -42,6 +58,29 @@ _open_ (optional): If you append _open_ to the end of the command, the output fi
 
 ### TF-IDF
 * Values - the Term Frequency-Inverse Document Frequency values are listed for each term, and done so in descending order.
+
+### Subset
+* Break down the text into the following parts:
+	* People
+	* Places
+	* Organizations
+	* Questions
+	* Quotations
+	* Statements
+
+### Parts of speech
+* Break down the text into the following parts:
+	* Nouns
+	* Verbs
+	* Adjectives
+	* Adverbs
+	* "The rest"
+
+## Supported Platforms
+* Windows 10 (tested)
+* macOS 10.13
+* Linux
+
 
 ## License
 

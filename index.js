@@ -13,6 +13,9 @@ var natural = require('natural');
 var wpos = require('wordpos');
 var open = require('open');
 var xl = require('excel4node');
+var request = require('request');
+var compromise = require('compromise');
+var readability = require('readability-meter');
 
 // Objects for work throughout.
 var naturalTFIDF = natural.TfIdf;
@@ -25,9 +28,10 @@ var wb = new xl.Workbook();
     - aFile - This is the file that will be analyzed.
     - oFile - The output file.
 */
-var aFile = process.argv[2];
-var oFile = process.argv[3];
-var openFile = process.argv[4];
+var onlineLocal = process.argv[2];
+var aFile = process.argv[3];
+var oFile = process.argv[4];
+var openFile = process.argv[5];
 
 // var config = require('./sampleconfig.json'); // Not used yet. Maybe in the future...
 //var d = new Date();
@@ -38,9 +42,10 @@ var openFile = process.argv[4];
         2. Character - individual character counts.
         3. Sentiment - sentiment score, comparative, vote.
         4. Term Frequency-Inverse Document Frequency - score for each word.
-        5. Parts of Speech - breakdown of nouns, verbs, adjectives, adverbs and the "rest".
+        5. Subset analysis - people, places, quotations, etc.
+        6. Parts of Speech - breakdown of nouns, verbs, adjectives, adverbs and the "rest".
 */
-var catCount = '5';
+var catCount = '6';
 
 /*
     - Style for the column headers in the output Excel file.
@@ -52,8 +57,23 @@ var headerStyle = {
     }
 };
 
+if (onlineLocal == 'online') {
+    request(aFile, function (error, response, body) {
+        var data = body;
+        analysis(data);
+    });
+} else {
+    fs.readFile(aFile, 'utf-8', function (err, data) {
+        analysis(data);
+    });
+}
+
 // The whole process is wrapped up in a file read callback (for now).
-fs.readFile(aFile, 'utf-8', function (err, data) {
+/*fs.readFile(aFile, 'utf-8', function (err, data) {
+    
+});*/
+
+function analysis(data) {
     /* The following two lines are for a plain text version of output (if the excel output starts to fail in the future and/or I resort back to it).
         //var dString = d.getFullYear() + '/' + String(parseInt(d.getMonth()) + 1) + '/' + d.getDate() + ', ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
         //var writeString = '';
@@ -100,6 +120,17 @@ fs.readFile(aFile, 'utf-8', function (err, data) {
     // Create the cells for the average word length.
     descWS.cell(5, 1).string('Average word length');
     descWS.cell(5, 2).number(parseFloat(avgWordLen));
+
+
+    var fkValues = readability.ease(data);
+    descWS.cell(6, 1).string('Flesch-Kincaid score');
+    descWS.cell(6, 2).number(parseFloat(fkValues.score.toFixed(5)));
+
+    descWS.cell(7, 1).string('Flesch-Kincaid school level');
+    descWS.cell(7, 2).string(fkValues.schoolLevel);
+
+    descWS.cell(8, 1).string('Flesch-Kincaid notes');
+    descWS.cell(8, 2).string(fkValues.notes);
 
     console.log(chalk.green('done.'));
 
@@ -191,10 +222,89 @@ fs.readFile(aFile, 'utf-8', function (err, data) {
     });
     console.log(chalk.green('done.'));
 
+    /*
+        * Subset Analysis
+    */
+    process.stdout.write('[5/' + catCount + '] Subset analysis...');
+    // Create the worksheet for the subset anaylsis.
+    var subsetWS = wb.addWorksheet('Subset');
+
+    // Create the compromise object (the library that does subset analysis).
+    var comp = compromise(data);
+    // Create the headers for people, places, organizations, questions, quotations and statements.
+    subsetWS.cell(1, 1).string('People').style(headerStyle);
+    subsetWS.cell(1, 2).string('Places').style(headerStyle);
+    subsetWS.cell(1, 3).string('Organizations').style(headerStyle);
+    subsetWS.cell(1, 4).string('Questions').style(headerStyle);
+    subsetWS.cell(1, 5).string('Quotations').style(headerStyle);
+    subsetWS.cell(1, 6).string('Statements').style(headerStyle);
+
+    // Generate an array of people.
+    var compPeople = comp.people().out('array');
+    // Set up a counter for the row where data will be inserted.    
+    var peopleCount = 2;
+    // Iterate through the compPeople array and insert the row into the spreadsheet.
+    compPeople.forEach(function (item) {
+        subsetWS.cell(peopleCount, 1).string(item);
+        peopleCount++;
+    });
+
+    // Generate an array of places.
+    var compPlaces = comp.places().out('array');
+    // Set up a counter for the row where data will be inserted.
+    var placesCount = 2;
+    // Iterate through the compPlaces array and insert the row into the spreadsheet.
+    compPlaces.forEach(function (item) {
+        subsetWS.cell(placesCount, 2).string(item);
+        placesCount++;
+    });
+
+    // Generate an array of organizations.
+    var compOrg = comp.organizations().out('array');
+    // Set up a counter for the row where data will be inserted.
+    var orgCount = 2;
+    // Iterate through the compOrg array and insert the row into the spreadsheet.
+    compOrg.forEach(function (item) {
+        subsetWS.cell(orgCount, 3).string(item);
+        orgCount++;
+    });
+
+    // // Generate an array of questions.
+    var compQues = comp.questions().out('array');
+    // Set up a counter for the row where data will be inserted.    
+    var quesCount = 2;
+    // Iterate through the compques array and insert the row into the spreadsheet.
+    compQues.forEach(function (item) {
+        subsetWS.cell(quesCount, 4).string(item);
+        quesCount++;
+    });
+
+    // Generate an array of quotations.
+    var compQuot = comp.quotations().out('array');
+    // Set up a counter for the row where data will be inserted.    
+    var quotCount = 2;
+    // Iterate through the compQuot array and insert the row into the spreadsheet.
+    compQuot.forEach(function (item) {
+        subsetWS.cell(quotCount, 5).string(item);
+        quotCount++;
+    });
+
+    // Generate an array of statements.
+    var compStmts = comp.statements().out('array');
+    // Set up a counter for the row where data will be inserted.    
+    var stmtCount = 2;
+    // Iterate through the compStmts array and insert the row into the spreadsheet.
+    compStmts.forEach(function (item) {
+        subsetWS.cell(stmtCount, 6).string(item);
+        stmtCount++;
+    });
+
+    console.log(chalk.green('done.'));
+
     /* 
         * Parts of Speech Analysis
     */
-    process.stdout.write('[5/' + catCount + '] Parts of speech analysis...');
+    process.stdout.write('[6/' + catCount + '] Parts of speech analysis...');
     //writeString += '\n\n\n-- Parts of Speech Values --\n';
     // Add a worksheet for the parts of speech analysis.
     var posWS = wb.addWorksheet('Parts of Speech');
@@ -241,7 +351,7 @@ fs.readFile(aFile, 'utf-8', function (err, data) {
             open(oFile);
         }
     });
-});
+}
 
 /*
     This function serves to create a JS map that contains counts for how often the character appears.
